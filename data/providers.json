@@ -1,0 +1,199 @@
+[
+  {
+    "id": "openai",
+    "name": "OpenAI",
+    "baseUrl": "https://api.openai.com/v1",
+    "defaultEndpoint": "/chat/completions",
+    "endpoints": [
+      "/chat/completions",
+      "/models",
+      "/embeddings",
+      "/images/generations",
+      "/audio/transcriptions"
+    ],
+    "methods": ["GET", "POST"],
+    "auth": {
+      "type": "bearer",
+      "headerName": "Authorization",
+      "prefix": "Bearer "
+    },
+    "defaultHeaders": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    "templates": {
+      "chat": {
+        "model": "gpt-4o-mini",
+        "messages": [
+          {"role": "user", "content": "Hello!"}
+        ]
+      }
+    },
+    "docsUrl": "https://platform.openai.com/docs/api-reference"
+  },
+  {
+    "id": "gemini",
+    "name": "Google Gemini",
+    "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+    "defaultEndpoint": "/models/gemini-1.5-flash:generateContent",
+    "endpoints": [
+      "/models",
+      "/models/gemini-1.5-flash:generateContent",
+      "/models/gemini-1.5-pro:generateContent",
+      "/models/gemini-2.0-flash:generateContent"
+    ],
+    "methods": ["GET", "POST"],
+    "auth": {
+      "type": "apiKeyQuery",
+      "paramName": "key"
+    },
+    "defaultHeaders": {
+      "Content-Type": "application/json"
+    },
+    "templates": {
+      "generate": {
+        "contents": [
+          {
+            "parts": [
+              {"text": "Explain how AI works in a few words"}
+            ]
+          }
+        ]
+      }
+    },
+    "docsUrl": "https://ai.google.dev/gemini-api/docs"
+  },
+  {
+    "id": "openrouter",
+    "name": "OpenRouter",
+    "baseUrl": "https://openrouter.ai/api/v1",
+    "defaultEndpoint": "/chat/completions",
+    "endpoints": [
+      "/chat/completions",
+      "/models",
+      "/generation"
+    ],
+    "methods": ["GET", "POST"],
+    "auth": {
+      "type": "bearer",
+      "headerName": "Authorization",
+      "prefix": "Bearer "
+    },
+    "defaultHeaders": {
+      "Content-Type": "application/json",
+      "HTTP-Referer": "https://api-lab.local",
+      "X-Title": "API LAB"
+    },
+    "templates": {
+      "chat": {
+        "model": "openai/gpt-4o-mini",
+        "messages": [
+          {"role": "user", "content": "Hello from API LAB"}
+        ]
+      }
+    },
+    "docsUrl": "https://openrouter.ai/docs"
+  },
+  {
+    "id": "groq",
+    "name": "Groq",
+    "baseUrl": "https://api.groq.com/openai/v1",
+    "defaultEndpoint": "/chat/completions",
+    "endpoints": [
+      "/chat/completions",
+      "/models"
+    ],
+    "methods": ["GET", "POST"],
+    "auth": {
+      "type": "bearer",
+      "headerName": "Authorization",
+      "prefix": "Bearer "
+    },
+    "defaultHeaders": {
+      "Content-Type": "application/json"
+    },
+    "templates": {
+      "chat": {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [
+          {"role": "user", "content": "Hello!"}
+        ]
+      }
+    },
+    "docsUrl": "https://console.groq.com/docs"
+  },
+  {
+    "id": "together",
+    "name": "Together AI",
+    "baseUrl": "https://api.together.xyz/v1",
+    "defaultEndpoint": "/chat/completions",
+    "endpoints": [
+      "/chat/completions",
+      "/models",
+      "/images/generations"
+    ],
+    "methods": ["GET", "POST"],
+    "auth": {
+      "type": "bearer",
+      "headerName": "Authorization",
+      "prefix": "Bearer "
+    },
+    "defaultHeaders": {
+      "Content-Type": "application/json"
+    },
+    "templates": {
+      "chat": {
+        "model": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+        "messages": [
+          {"role": "user", "content": "Hello!"}
+        ]
+      }
+    },
+    "docsUrl": "https://docs.together.ai"
+  },
+  {
+    "id": "deepseek",
+    "name": "DeepSeek",
+    "baseUrl": "https://api.deepseek.com",
+    "defaultEndpoint": "/chat/completions",
+    "endpoints": [
+      "/chat/completions",
+      "/models"
+    ],
+    "methods": ["GET", "POST"],
+    "auth": {
+      "type": "bearer",
+      "headerName": "Authorization",
+      "prefix": "Bearer "
+    },
+    "defaultHeaders": {
+      "Content-Type": "application/json"
+    },
+    "templates": {
+      "chat": {
+        "model": "deepseek-chat",
+        "messages": [
+          {"role": "user", "content": "Hello!"}
+        ]
+      }
+    },
+    "docsUrl": "https://platform.deepseek.com/api-docs"
+  },
+  {
+    "id": "custom",
+    "name": "Custom API",
+    "baseUrl": "",
+    "defaultEndpoint": "",
+    "endpoints": [],
+    "methods": ["GET", "POST"],
+    "auth": {
+      "type": "none"
+    },
+    "defaultHeaders": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    "templates": {},
+    "docsUrl": ""
+  }
+]
