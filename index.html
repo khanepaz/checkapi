@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="API LAB – Universal API Testing & Analysis Workbench" />
+  <title>API LAB – Universal API Testing Workbench</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/themes.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="logo">
+        <div class="logo-icon">AL</div>
+        <span>API LAB</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-icon btn-ghost mobile-menu-btn" id="btn-menu" title="Menu">☰</button>
+        <button class="btn btn-sm btn-ghost" id="btn-lang" title="Language">فا</button>
+        <button class="btn btn-sm btn-ghost" id="btn-theme" title="Toggle theme">🌓</button>
+      </div>
+    </header>
+
+    <div class="main-layout">
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <h3>Navigation</h3>
+          <button class="nav-item active" data-panel="dashboard">
+            <span class="icon">📊</span> <span data-i18n="dashboard">Dashboard</span>
+          </button>
+          <button class="nav-item" data-panel="request">
+            <span class="icon">🚀</span> <span data-i18n="request">Request</span>
+          </button>
+          <button class="nav-item" data-panel="history">
+            <span class="icon">📋</span> <span data-i18n="history">History</span>
+          </button>
+          <button class="nav-item" data-panel="providers">
+            <span class="icon">🔌</span> <span data-i18n="providers">Providers</span>
+          </button>
+          <button class="nav-item" data-panel="settings">
+            <span class="icon">⚙️</span> <span data-i18n="settings">Settings</span>
+          </button>
+        </div>
+        <div class="sidebar-section" style="margin-top:auto">
+          <p class="text-sm text-muted" style="padding:0.5rem">v1.0 · GitHub Pages ready</p>
+        </div>
+      </aside>
+
+      <main class="content-area">
+        <div class="panel active" id="panel-dashboard">
+          <div class="dashboard-grid">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-total">0</div>
+              <div class="stat-label" data-i18n="total_requests">Total Requests</div>
+            </div>
+            <div class="stat-card success">
+              <div class="stat-value" id="stat-success">0</div>
+              <div class="stat-label" data-i18n="successful">Successful</div>
+            </div>
+            <div class="stat-card error">
+              <div class="stat-value" id="stat-failed">0</div>
+              <div class="stat-label" data-i18n="failed">Failed</div>
+            </div>
+          </div>
+          <div class="dashboard-section">
+            <h3 data-i18n="recent_tests">Recent Tests</h3>
+            <div class="history-list" id="recent-list"></div>
+          </div>
+        </div>
+
+        <div class="panel" id="panel-request">
+          <div class="request-panel relative">
+            <div id="loading-overlay" class="loading-overlay hidden">
+              <div class="spinner"></div>
+              <p data-i18n="loading">Sending request…</p>
+              <button class="btn btn-ghost" id="btn-cancel" data-i18n="cancel">Cancel</button>
+            </div>
+
+            <div class="request-top">
+              <div class="security-banner">
+                ⚠️ <span data-i18n="security_note">Credentials are never stored in history. Browser requests may be blocked by CORS.</span>
+              </div>
+
+              <div class="flex gap-3 items-center" style="flex-wrap:wrap">
+                <div class="segmented method-seg">
+                  <button class="active" data-method="GET">GET</button>
+                  <button data-method="POST">POST</button>
+                </div>
+                <div class="segmented url-mode-seg">
+                  <button class="active" data-mode="provider">Provider</button>
+                  <button data-mode="custom">Custom URL</button>
+                </div>
+              </div>
+
+              <div class="url-bar">
+                <select class="form-control method-select" id="provider-select" style="width:160px"></select>
+                <div class="flex-1 font-mono form-control" id="final-url" style="display:flex;align-items:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary)">
+                  https://api.openai.com/v1/chat/completions
+                </div>
+                <button class="btn btn-primary send-btn" id="btn-send">
+                  <span data-i18n="send">Send</span> ↗
+                </button>
+              </div>
+            </div>
+
+            <div class="request-body-area">
+              <div class="config-side">
+                <div class="config-tabs">
+                  <button class="tab-btn active" data-tab="tab-url">URL</button>
+                  <button class="tab-btn" data-tab="tab-auth" data-i18n="auth">Auth</button>
+                  <button class="tab-btn" data-tab="tab-headers" data-i18n="headers">Headers</button>
+                  <button class="tab-btn" data-tab="tab-params" data-i18n="query">Query</button>
+                  <button class="tab-btn" data-tab="tab-body" data-i18n="body">Body</button>
+                </div>
+
+                <div class="tab-content active" id="tab-url">
+                  <div id="provider-url-group">
+                    <div class="form-group">
+                      <label data-i18n="endpoint">Endpoint</label>
+                      <input type="text" class="form-control font-mono" id="endpoint-input" placeholder="/chat/completions" />
+                    </div>
+                  </div>
+                  <div id="custom-url-group" class="hidden">
+                    <div class="form-group">
+                      <label data-i18n="url">Full URL</label>
+                      <input type="text" class="form-control font-mono" id="custom-url-input" placeholder="https://api.example.com/v1/resource" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tab-content" id="tab-auth">
+                  <div class="form-group">
+                    <label data-i18n="auth">Authentication</label>
+                    <select class="form-control" id="auth-type">
+                      <option value="auto">Auto Suggest</option>
+                      <option value="bearer">Bearer Token</option>
+                      <option value="apiKeyHeader">API Key (Header)</option>
+                      <option value="apiKeyQuery">API Key (Query)</option>
+                      <option value="basic">Basic Auth</option>
+                      <option value="custom">Custom Header</option>
+                      <option value="none">No Auth</option>
+                    </select>
+                  </div>
+                  <div class="auth-fields" id="auth-fields"></div>
+                </div>
+
+                <div class="tab-content" id="tab-headers">
+                  <table class="kv-table" id="headers-table">
+                    <thead>
+                      <tr>
+                        <th></th>
+                        <th>Name</th>
+                        <th>Value</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                  <button class="btn btn-sm btn-ghost kv-add-btn" id="btn-add-header" data-i18n="add_header">Add Header</button>
+                </div>
+
+                <div class="tab-content" id="tab-params">
+                  <table class="kv-table" id="params-table">
+                    <thead>
+                      <tr>
+                        <th></th>
+                        <th>Key</th>
+                        <th>Value</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                  <button class="btn btn-sm btn-ghost kv-add-btn" id="btn-add-param" data-i18n="add_param">Add Parameter</button>
+                </div>
+
+                <div class="tab-content" id="tab-body">
+                  <div class="flex justify-between items-center mb-2" id="body-actions">
+                    <span class="text-sm text-muted">JSON Body</span>
+                    <div class="flex gap-2">
+                      <button class="btn btn-sm btn-ghost" id="btn-format-json">Format</button>
+                      <button class="btn btn-sm btn-ghost" id="btn-clear-body">Clear</button>
+                    </div>
+                  </div>
+                  <textarea class="form-control" id="body-editor" spellcheck="false" placeholder='{\n  "key": "value"\n}'></textarea>
+                </div>
+              </div>
+
+              <div class="response-side relative">
+                <div class="response-tabs">
+                  <button class="tab-btn active" data-tab="tab-pretty" data-i18n="pretty">Pretty</button>
+                  <button class="tab-btn" data-tab="tab-raw" data-i18n="raw">Raw</button>
+                  <button class="tab-btn" data-tab="tab-preview" data-i18n="preview">Preview</button>
+                  <button class="tab-btn" data-tab="tab-res-headers" data-i18n="headers">Headers</button>
+                  <button class="tab-btn" data-tab="tab-analysis" data-i18n="analysis">Analysis</button>
+                </div>
+                <div class="response-meta" id="response-meta"></div>
+                <div class="tab-content active" id="tab-pretty">
+                  <div id="response-pretty"></div>
+                </div>
+                <div class="tab-content" id="tab-raw">
+                  <div id="response-raw"></div>
+                </div>
+                <div class="tab-content" id="tab-preview">
+                  <div id="response-preview"></div>
+                </div>
+                <div class="tab-content" id="tab-res-headers">
+                  <div id="response-headers"></div>
+                </div>
+                <div class="tab-content" id="tab-analysis">
+                  <div id="response-analyzer"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" id="panel-history">
+          <div class="card-header">
+            <span data-i18n="history">History</span>
+            <div class="flex gap-2">
+              <button class="btn btn-sm btn-ghost" id="btn-export" data-i18n="export">Export</button>
+              <button class="btn btn-sm btn-ghost" id="btn-import" data-i18n="import">Import</button>
+              <input type="file" id="import-file" accept=".json" class="hidden" />
+              <button class="btn btn-sm btn-danger" id="btn-clear-history" data-i18n="clear_history">Clear History</button>
+            </div>
+          </div>
+          <div class="card-body" style="overflow:auto;flex:1">
+            <div class="history-list" id="history-list"></div>
+          </div>
+        </div>
+
+        <div class="panel" id="panel-providers">
+          <div class="card-header">
+            <span data-i18n="available_providers">Available Providers</span>
+          </div>
+          <div class="provider-grid" id="providers-grid"></div>
+        </div>
+
+        <div class="panel" id="panel-settings">
+          <div class="card-header">
+            <span data-i18n="settings">Settings</span>
+          </div>
+          <div class="card-body" style="max-width:480px">
+            <div class="form-group">
+              <label data-i18n="timeout">Timeout (ms)</label>
+              <input type="number" class="form-control" id="setting-timeout" value="30000" min="1000" step="1000" />
+            </div>
+            <div class="form-group">
+              <label data-i18n="theme">Theme</label>
+              <p class="text-sm text-muted">Use the 🌓 button in the header to toggle dark / light mode.</p>
+            </div>
+            <div class="form-group">
+              <label data-i18n="language">Language</label>
+              <p class="text-sm text-muted">Use the language button in the header (EN / فا).</p>
+            </div>
+            <div class="form-group">
+              <button class="btn btn-danger" id="btn-clear-data" data-i18n="clear_data">Clear All Data</button>
+            </div>
+            <div class="security-banner mt-3">
+              🔒 API keys are never saved to LocalStorage or history by default. This app runs entirely in your browser.
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/providers.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/analyzer.js"></script>
+  <script src="js/response.js"></script>
+  <script src="js/request.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
