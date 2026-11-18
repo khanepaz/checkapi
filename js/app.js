@@ -1,12 +1,11 @@
 /**
  * API LAB - Main Application
- * Includes Code snippet generation (curl / Python / JS) after each request.
  */
 
 const App = {
   state: {
     currentProviderId: 'openai',
-    method: 'POST',
+    method: 'GET',
     urlMode: 'provider',
     endpoint: '',
     customUrl: '',
@@ -184,7 +183,7 @@ const App = {
       Settings.set('timeout', parseInt(e.target.value, 10) || 30000);
     });
     document.getElementById('btn-clear-data')?.addEventListener('click', () => {
-      if (confirm('This will clear all local data (settings, history, custom providers). Continue?')) {
+      if (confirm('This will clear all local data. Continue?')) {
         Settings.clearAllData();
         History.clear();
         Providers.restoreDefaults();
@@ -203,7 +202,7 @@ const App = {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('panel-' + name)?.classList.add('active');
-    document.querySelector(`.nav-item[data-panel="${name}"]`)?.classList.add('active');
+    document.querySelector('.nav-item[data-panel="' + name + '"]')?.classList.add('active');
     document.querySelector('.sidebar')?.classList.remove('open');
     if (name === 'dashboard') this.renderDashboard();
     if (name === 'history') this.renderHistory();
@@ -214,7 +213,7 @@ const App = {
     const sel = document.getElementById('provider-select');
     if (!sel) return;
     sel.innerHTML = Providers.getAll().map(p =>
-      `<option value="${p.id}">${Utils.escapeHtml(p.name)}</option>`
+      '<option value="' + p.id + '">' + Utils.escapeHtml(p.name) + '</option>'
     ).join('');
     sel.value = this.state.currentProviderId;
   },
@@ -298,70 +297,20 @@ const App = {
 
     if (type === 'auto') {
       const suggested = Auth.suggest(p);
-      html = `<p class="text-sm text-muted">Suggested: <strong>${suggested}</strong> (based on provider preset). Select a specific method to configure credentials.</p>`;
+      html = '<p class="text-sm text-muted">Suggested: <strong>' + suggested + '</strong>. Select a method to enter credentials.</p>';
     } else if (type === 'bearer') {
-      html = `
-        <div class="form-group">
-          <label>Token</label>
-          <div class="masked-input-wrapper">
-            <input type="password" class="form-control" id="auth-token" placeholder="sk-..." autocomplete="off">
-            <button type="button" class="toggle-mask" data-target="auth-token">👁</button>
-          </div>
-        </div>`;
-    } else if (type === 'apiKeyHeader' || type === 'apiKeyQuery') {
-      const isQuery = type === 'apiKeyQuery';
-      const param = p?.auth?.paramName || 'key';
-      html = isQuery ? `
-        <div class="form-group">
-          <label>Query Parameter Name</label>
-          <input type="text" class="form-control" id="auth-param-name" value="${Utils.escapeHtml(param)}">
-        </div>
-        <div class="form-group">
-          <label>API Key</label>
-          <div class="masked-input-wrapper">
-            <input type="password" class="form-control" id="auth-api-key" placeholder="Your API key" autocomplete="off">
-            <button type="button" class="toggle-mask" data-target="auth-api-key">👁</button>
-          </div>
-        </div>` : `
-        <div class="form-group">
-          <label>Header Name</label>
-          <input type="text" class="form-control" id="auth-header-name" value="X-API-Key">
-        </div>
-        <div class="form-group">
-          <label>API Key</label>
-          <div class="masked-input-wrapper">
-            <input type="password" class="form-control" id="auth-api-key" placeholder="Your API key" autocomplete="off">
-            <button type="button" class="toggle-mask" data-target="auth-api-key">👁</button>
-          </div>
-        </div>`;
+      html = '<div class="form-group"><label>Token</label><div class="masked-input-wrapper"><input type="password" class="form-control" id="auth-token" placeholder="sk-..." autocomplete="off"><button type="button" class="toggle-mask" data-target="auth-token">👁</button></div></div>';
+    } else if (type === 'apiKeyHeader') {
+      html = '<div class="form-group"><label>Header Name</label><input type="text" class="form-control" id="auth-header-name" value="X-API-Key"></div><div class="form-group"><label>API Key</label><div class="masked-input-wrapper"><input type="password" class="form-control" id="auth-api-key" placeholder="Your API key" autocomplete="off"><button type="button" class="toggle-mask" data-target="auth-api-key">👁</button></div></div>';
+    } else if (type === 'apiKeyQuery') {
+      const param = (p && p.auth && p.auth.paramName) || 'key';
+      html = '<div class="form-group"><label>Query Parameter Name</label><input type="text" class="form-control" id="auth-param-name" value="' + Utils.escapeHtml(param) + '"></div><div class="form-group"><label>API Key</label><div class="masked-input-wrapper"><input type="password" class="form-control" id="auth-api-key" placeholder="Your API key" autocomplete="off"><button type="button" class="toggle-mask" data-target="auth-api-key">👁</button></div></div>';
     } else if (type === 'basic') {
-      html = `
-        <div class="form-group">
-          <label>Username</label>
-          <input type="text" class="form-control" id="auth-username" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <div class="masked-input-wrapper">
-            <input type="password" class="form-control" id="auth-password" autocomplete="off">
-            <button type="button" class="toggle-mask" data-target="auth-password">👁</button>
-          </div>
-        </div>`;
+      html = '<div class="form-group"><label>Username</label><input type="text" class="form-control" id="auth-username" autocomplete="off"></div><div class="form-group"><label>Password</label><div class="masked-input-wrapper"><input type="password" class="form-control" id="auth-password" autocomplete="off"><button type="button" class="toggle-mask" data-target="auth-password">👁</button></div></div>';
     } else if (type === 'custom') {
-      html = `
-        <div class="form-group">
-          <label>Header Name</label>
-          <input type="text" class="form-control" id="auth-header-name" placeholder="X-Custom-Auth">
-        </div>
-        <div class="form-group">
-          <label>Header Value</label>
-          <div class="masked-input-wrapper">
-            <input type="password" class="form-control" id="auth-header-value" autocomplete="off">
-            <button type="button" class="toggle-mask" data-target="auth-header-value">👁</button>
-          </div>
-        </div>`;
+      html = '<div class="form-group"><label>Header Name</label><input type="text" class="form-control" id="auth-header-name" placeholder="X-Custom-Auth"></div><div class="form-group"><label>Header Value</label><div class="masked-input-wrapper"><input type="password" class="form-control" id="auth-header-value" autocomplete="off"><button type="button" class="toggle-mask" data-target="auth-header-value">👁</button></div></div>';
     } else {
-      html = `<p class="text-sm text-muted">No authentication will be sent.</p>`;
+      html = '<p class="text-sm text-muted">No authentication will be sent.</p>';
     }
 
     container.innerHTML = html;
@@ -375,7 +324,7 @@ const App = {
 
   collectAuthFields() {
     const f = {};
-    const get = id => document.getElementById(id)?.value || '';
+    const get = id => (document.getElementById(id) && document.getElementById(id).value) || '';
     f.token = get('auth-token');
     f.apiKey = get('auth-api-key');
     f.headerName = get('auth-header-name');
@@ -389,14 +338,12 @@ const App = {
   renderHeaders() {
     const tbody = document.querySelector('#headers-table tbody');
     if (!tbody) return;
-    tbody.innerHTML = this.state.headers.map((h, i) => `
-      <tr>
-        <td class="enabled-cell"><input type="checkbox" ${h.enabled ? 'checked' : ''} data-idx="${i}" class="hdr-enabled"></td>
-        <td><input type="text" value="${Utils.escapeHtml(h.key)}" data-idx="${i}" class="hdr-key" placeholder="Header"></td>
-        <td><input type="text" value="${Utils.escapeHtml(h.value)}" data-idx="${i}" class="hdr-value" placeholder="Value"></td>
-        <td class="action-cell"><button class="btn btn-sm btn-ghost hdr-del" data-idx="${i}">✕</button></td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = this.state.headers.map((h, i) =>
+      '<tr><td class="enabled-cell"><input type="checkbox" ' + (h.enabled ? 'checked' : '') + ' data-idx="' + i + '" class="hdr-enabled"></td>' +
+      '<td><input type="text" value="' + Utils.escapeHtml(h.key) + '" data-idx="' + i + '" class="hdr-key" placeholder="Header"></td>' +
+      '<td><input type="text" value="' + Utils.escapeHtml(h.value) + '" data-idx="' + i + '" class="hdr-value" placeholder="Value"></td>' +
+      '<td class="action-cell"><button class="btn btn-sm btn-ghost hdr-del" data-idx="' + i + '">✕</button></td></tr>'
+    ).join('');
 
     tbody.querySelectorAll('.hdr-enabled').forEach(el => {
       el.addEventListener('change', e => { this.state.headers[e.target.dataset.idx].enabled = e.target.checked; });
@@ -423,14 +370,12 @@ const App = {
   renderParams() {
     const tbody = document.querySelector('#params-table tbody');
     if (!tbody) return;
-    tbody.innerHTML = this.state.queryParams.map((p, i) => `
-      <tr>
-        <td class="enabled-cell"><input type="checkbox" ${p.enabled !== false ? 'checked' : ''} data-idx="${i}" class="prm-enabled"></td>
-        <td><input type="text" value="${Utils.escapeHtml(p.key)}" data-idx="${i}" class="prm-key" placeholder="Key"></td>
-        <td><input type="text" value="${Utils.escapeHtml(p.value)}" data-idx="${i}" class="prm-value" placeholder="Value"></td>
-        <td class="action-cell"><button class="btn btn-sm btn-ghost prm-del" data-idx="${i}">✕</button></td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = this.state.queryParams.map((p, i) =>
+      '<tr><td class="enabled-cell"><input type="checkbox" ' + (p.enabled !== false ? 'checked' : '') + ' data-idx="' + i + '" class="prm-enabled"></td>' +
+      '<td><input type="text" value="' + Utils.escapeHtml(p.key) + '" data-idx="' + i + '" class="prm-key" placeholder="Key"></td>' +
+      '<td><input type="text" value="' + Utils.escapeHtml(p.value) + '" data-idx="' + i + '" class="prm-value" placeholder="Value"></td>' +
+      '<td class="action-cell"><button class="btn btn-sm btn-ghost prm-del" data-idx="' + i + '">✕</button></td></tr>'
+    ).join('');
 
     tbody.querySelectorAll('.prm-enabled').forEach(el => {
       el.addEventListener('change', e => {
@@ -468,7 +413,7 @@ const App = {
       baseUrl = this.state.customUrl.trim();
     } else {
       const p = Providers.getById(this.state.currentProviderId);
-      const base = (p?.baseUrl || '').replace(/\/$/, '');
+      const base = (p && p.baseUrl || '').replace(/\/$/, '');
       let ep = this.state.endpoint || '';
       if (ep && !ep.startsWith('/')) ep = '/' + ep;
       baseUrl = base + ep;
@@ -487,12 +432,12 @@ const App = {
     const provider = Providers.getById(this.state.currentProviderId);
     const authResult = Auth.build(authType, authFields, provider);
 
-    const headers = { ...authResult.headers };
+    const headers = Object.assign({}, authResult.headers);
     this.state.headers.forEach(h => {
       if (h.enabled && h.key) headers[h.key] = h.value;
     });
 
-    const allParams = [...this.state.queryParams, ...authResult.queryParams];
+    const allParams = this.state.queryParams.concat(authResult.queryParams);
     const query = Utils.buildQuery(allParams);
     const finalUrl = baseUrl + query;
     const body = this.state.method === 'POST' ? this.state.body : '';
@@ -502,17 +447,15 @@ const App = {
     const config = {
       method: this.state.method,
       url: finalUrl,
-      headers,
-      body
+      headers: headers,
+      body: body
     };
 
     const result = await RequestEngine.send(config);
     this.setSending(false);
 
-    // Show response body in Pretty / Raw
     ResponseViewer.render(result);
 
-    // Generate code snippets for learning
     if (window.CodeGen) {
       CodeGen.render({
         method: this.state.method,
@@ -525,7 +468,7 @@ const App = {
     const safeUrl = this._stripSecretsFromUrl(baseUrl, allParams);
     History.add({
       providerId: this.state.currentProviderId,
-      providerName: provider?.name || 'Custom',
+      providerName: (provider && provider.name) || 'Custom',
       method: this.state.method,
       url: safeUrl,
       status: result.status,
@@ -537,7 +480,6 @@ const App = {
     this.renderDashboard();
     this.renderHistory();
 
-    // Auto-switch to Pretty so user sees the body
     document.querySelectorAll('.response-tabs .tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.response-side .tab-content').forEach(c => c.classList.remove('active'));
     const prettyBtn = document.querySelector('.response-tabs .tab-btn[data-tab="tab-pretty"]');
@@ -549,10 +491,7 @@ const App = {
       this.toast(result.error.message || 'Request failed', 'error');
     } else {
       const hasBody = result.body && result.body.trim().length > 0;
-      this.toast(
-        hasBody ? `Response ${result.status} – body received` : `Response ${result.status}`,
-        result.success ? 'success' : 'info'
-      );
+      this.toast(hasBody ? 'Response ' + result.status + ' – body received' : 'Response ' + result.status, result.success ? 'success' : 'info');
     }
   },
 
@@ -562,12 +501,10 @@ const App = {
       const secretKeys = ['key', 'api_key', 'apikey', 'token', 'access_token', 'secret'];
       secretKeys.forEach(k => u.searchParams.delete(k));
       params.forEach(p => {
-        if (p.key && secretKeys.includes(p.key.toLowerCase())) {
-          u.searchParams.delete(p.key);
-        }
+        if (p.key && secretKeys.indexOf(p.key.toLowerCase()) >= 0) u.searchParams.delete(p.key);
       });
       return u.origin === 'https://placeholder.local' ? u.pathname + u.search : u.toString();
-    } catch {
+    } catch (e) {
       return url;
     }
   },
@@ -595,17 +532,16 @@ const App = {
     if (!list) return;
     const recent = History.getAll().slice(0, 8);
     if (!recent.length) {
-      list.innerHTML = `<div class="empty-state"><p>${this.t('no_history')}</p></div>`;
+      list.innerHTML = '<div class="empty-state"><p>' + this.t('no_history') + '</p></div>';
       return;
     }
-    list.innerHTML = recent.map(h => `
-      <div class="history-item" data-id="${h.id}">
-        <span class="method">${h.method}</span>
-        <span class="url">${Utils.escapeHtml(h.url)}</span>
-        <span class="status status-badge ${Utils.statusCategory(h.status)}">${h.status ?? '—'}</span>
-        <span class="time">${Utils.formatDuration(h.duration)}</span>
-      </div>
-    `).join('');
+    list.innerHTML = recent.map(h =>
+      '<div class="history-item" data-id="' + h.id + '">' +
+      '<span class="method">' + h.method + '</span>' +
+      '<span class="url">' + Utils.escapeHtml(h.url) + '</span>' +
+      '<span class="status status-badge ' + Utils.statusCategory(h.status) + '">' + (h.status != null ? h.status : '—') + '</span>' +
+      '<span class="time">' + Utils.formatDuration(h.duration) + '</span></div>'
+    ).join('');
   },
 
   renderHistory() {
@@ -613,21 +549,20 @@ const App = {
     if (!list) return;
     const items = History.getAll();
     if (!items.length) {
-      list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>${this.t('no_history')}</p></div>`;
+      list.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>' + this.t('no_history') + '</p></div>';
       return;
     }
-    list.innerHTML = items.map(h => `
-      <div class="history-item">
-        <span class="method">${h.method}</span>
-        <span class="url" title="${Utils.escapeHtml(h.url)}">${Utils.escapeHtml(h.url)}</span>
-        <span class="status status-badge ${Utils.statusCategory(h.status)}">${h.status ?? 'ERR'}</span>
-        <span class="time">${Utils.formatTime(h.timestamp)}</span>
-        <button class="btn btn-sm btn-ghost hist-del" data-id="${h.id}">✕</button>
-      </div>
-    `).join('');
+    list.innerHTML = items.map(h =>
+      '<div class="history-item">' +
+      '<span class="method">' + h.method + '</span>' +
+      '<span class="url" title="' + Utils.escapeHtml(h.url) + '">' + Utils.escapeHtml(h.url) + '</span>' +
+      '<span class="status status-badge ' + Utils.statusCategory(h.status) + '">' + (h.status != null ? h.status : 'ERR') + '</span>' +
+      '<span class="time">' + Utils.formatTime(h.timestamp) + '</span>' +
+      '<button class="btn btn-sm btn-ghost hist-del" data-id="' + h.id + '">✕</button></div>'
+    ).join('');
 
     list.querySelectorAll('.hist-del').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', e => {
         e.stopPropagation();
         History.remove(btn.dataset.id);
         this.renderHistory();
@@ -639,14 +574,13 @@ const App = {
   renderProvidersPanel() {
     const grid = document.getElementById('providers-grid');
     if (!grid) return;
-    grid.innerHTML = Providers.getAll().map(p => `
-      <div class="provider-card">
-        <h4>${Utils.escapeHtml(p.name)}</h4>
-        <div class="base-url">${Utils.escapeHtml(p.baseUrl || '—')}</div>
-        <div class="text-sm text-muted">Auth: ${p.auth?.type || 'none'}</div>
-        ${p.docsUrl ? `<a href="${Utils.escapeHtml(p.docsUrl)}" target="_blank" rel="noopener">Docs ↗</a>` : ''}
-      </div>
-    `).join('');
+    grid.innerHTML = Providers.getAll().map(p =>
+      '<div class="provider-card"><h4>' + Utils.escapeHtml(p.name) + '</h4>' +
+      '<div class="base-url">' + Utils.escapeHtml(p.baseUrl || '—') + '</div>' +
+      '<div class="text-sm text-muted">Auth: ' + ((p.auth && p.auth.type) || 'none') + '</div>' +
+      (p.docsUrl ? '<a href="' + Utils.escapeHtml(p.docsUrl) + '" target="_blank" rel="noopener">Docs ↗</a>' : '') +
+      '</div>'
+    ).join('');
   },
 
   exportConfig() {
@@ -668,7 +602,7 @@ const App = {
   },
 
   importConfig(e) {
-    const file = e.target.files?.[0];
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
@@ -725,15 +659,16 @@ const App = {
     if (langBtn) langBtn.textContent = Settings.get('language') === 'fa' ? 'EN' : 'فا';
   },
 
-  toast(msg, type = 'info') {
+  toast(msg, type) {
+    type = type || 'info';
     const container = document.getElementById('toast-container');
     if (!container) return;
     const el = document.createElement('div');
-    el.className = `toast ${type}`;
+    el.className = 'toast ' + type;
     el.textContent = msg;
     container.appendChild(el);
     setTimeout(() => el.remove(), 3500);
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', function() { App.init(); });
