@@ -40,20 +40,22 @@ const ResponseViewer = {
       </div>
     `;
 
-    if (ctx.body) {
+    if (ctx.body && ctx.body.trim()) {
       const parsed = Utils.tryParseJSON(ctx.body);
       if (parsed.ok) {
         prettyEl.innerHTML = `<pre class="response-content">${Utils.syntaxHighlight(parsed.data)}</pre>`;
       } else {
         prettyEl.innerHTML = `<pre class="response-content">${Utils.escapeHtml(ctx.body)}</pre>`;
       }
+    } else if (ctx.error) {
+      prettyEl.innerHTML = `<div class="empty-state"><div class="icon">⚠</div><p>${Utils.escapeHtml(ctx.error.message || 'Request failed')}</p><p class="text-sm text-muted">Check the Analysis tab for more details (CORS, network, timeout…)</p></div>`;
     } else {
-      prettyEl.innerHTML = `<div class="empty-state"><div class="icon">∅</div><p>Empty response</p></div>`;
+      prettyEl.innerHTML = `<div class="empty-state"><div class="icon">∅</div><p>Empty response body</p><p class="text-sm text-muted">Status ${ctx.status ?? '—'} was received but the body is empty.</p></div>`;
     }
 
-    rawEl.innerHTML = ctx.body
+    rawEl.innerHTML = (ctx.body && ctx.body.trim())
       ? `<pre class="response-content">${Utils.escapeHtml(ctx.body)}</pre>`
-      : `<div class="empty-state"><p>Empty</p></div>`;
+      : `<div class="empty-state"><p>Empty body</p></div>`;
 
     previewEl.innerHTML = '';
     if (ctx.body) {
