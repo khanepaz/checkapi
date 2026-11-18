@@ -74,6 +74,16 @@ const RequestEngine = {
 
     } catch (err) {
       error = err;
+      if (err && err.name === 'TypeError' && /Failed to fetch|NetworkError|Load failed/i.test(err.message || '')) {
+        const friendly = new Error(
+          'Network/CORS error: The browser blocked the response. ' +
+          'This usually means the API does not allow requests from this origin (GitHub Pages). ' +
+          'Use the Code tab (cURL or Python) to run the same request outside the browser.'
+        );
+        friendly.name = 'CORSOrNetworkError';
+        friendly.original = err;
+        error = friendly;
+      }
     } finally {
       clearTimeout(timeoutId);
       this.controller = null;
@@ -82,7 +92,7 @@ const RequestEngine = {
     const duration = performance.now() - start;
     const success = !error && status != null && status >= 200 && status < 400;
 
-    const result = {
+    return {
       status,
       statusText,
       body,
@@ -96,8 +106,6 @@ const RequestEngine = {
       url: config.url,
       timestamp: Date.now()
     };
-
-    return result;
   },
 
   cancel() {
