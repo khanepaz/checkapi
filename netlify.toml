@@ -1,0 +1,7 @@
+
+[build]
+  command = "mkdir -p dist && cp index.html dist/ && cp -R css js data dist/"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
