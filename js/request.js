@@ -1,20 +1,48 @@
+
 /**
  * Request Builder & Executor
+ * Sends requests through Netlify Proxy to avoid browser CORS restrictions.
  */
 
 const RequestEngine = {
   controller: null,
 
+  PROXY_URL: 'https://checkapi1.netlify.app/.netlify/functions/proxy',
+  TOKEN_KEY: 'checkapi_proxy_token',
+
+  getProxyToken() {
+    let token = sessionStorage.getItem(this.TOKEN_KEY);
+
+    if (!token) {
+      token = window.prompt('Enter your Checkapi Proxy Token:');
+
+      if (!token || !token.trim()) {
+        throw new Error('Proxy token is required.');
+      }
+
+      token = token.trim();
+      sessionStorage.setItem(this.TOKEN_KEY, token);
+    }
+
+    return token;
+  },
+
   async send(config) {
     if (this.controller) {
       this.controller.abort();
     }
-    this.controller = new AbortController();
+
+    const controller = new AbortController();
+    this.controller = controller;
 
     const timeout = Settings.get('timeout') || 30000;
-    const timeoutId = setTimeout(() => this.controller.abort(), timeout);
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      timeout
+    );
 
     const start = performance.now();
+
     let status = null;
     let statusText = '';
     let body = '';
@@ -24,73 +52,101 @@ const RequestEngine = {
     let error = null;
 
     try {
-      let url;
-      try {
-        url = new URL(config.url);
-      } catch {
-        throw new Error('Invalid URL. Please check the request URL.');
+      const url = new URL(config.url);
+
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        throw new Error('Only HTTP and HTTPS URLs are supported.');
       }
+
+      const token = this.getProxyToken();
 
       const finalHeaders = { ...config.headers };
 
       let bodyPayload = undefined;
-      if (config.method === 'POST' || config.method === 'PUT' || config.method === 'PATCH') {
-        if (config.body && config.body.trim()) {
-          const ct = finalHeaders['Content-Type'] || finalHeaders['content-type'] || '';
-          if (ct.includes('json') || !ct) {
-            const parsed = Utils.tryParseJSON(config.body);
-            if (!parsed.ok) {
-              throw new Error('Invalid JSON body: ' + parsed.error);
-            }
-            bodyPayload = config.body;
-            if (!ct) finalHeaders['Content-Type'] = 'application/json';
-          } else {
-            bodyPayload = config.body;
+
+      if (
+        ['POST', 'PUT', 'PATCH'].includes(config.method) &&
+        config.body &&
+        config.body.trim()
+      ) {
+        const ct =
+          finalHeaders['Content-Type'] ||
+          finalHeaders['content-type'] ||
+          '';
+
+        if (ct.includes('json') || !ct) {
+          const parsed = Utils.tryParseJSON(config.body);
+
+          if (!parsed.ok) {
+            throw new Error(
+              'Invalid JSON body: ' + parsed.error
+            );
           }
+
+          bodyPayload = config.body;
+
+          if (!ct) {
+            finalHeaders['Content-Type'] = 'application/json';
+          }
+        } else {
+          bodyPayload = config.body;
         }
       }
 
-      const fetchOpts = {
-        method: config.method,
-        headers: finalHeaders,
-        signal: this.controller.signal
-      };
+      const response = await fetch(this.PROXY_URL, {
+        method: 'POST',
 
-      if (bodyPayload !== undefined) {
-        fetchOpts.body = bodyPayload;
-      }
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Checkapi-Token': token
+        },
 
-      const response = await fetch(url.toString(), fetchOpts);
+        body: JSON.stringify({
+          url: url.toString(),
+          method: config.method,
+          headers: finalHeaders,
+          body: bodyPayload
+        }),
+
+        signal: controller.signal
+      });
+
       status = response.status;
       statusText = response.statusText;
 
-      response.headers.forEach((v, k) => {
-        headers[k] = v;
+      response.headers.forEach((value, key) => {
+        headers[key] = value;
       });
-      contentType = headers['content-type'] || headers['Content-Type'] || '';
+
+      contentType =
+        headers['content-type'] || '';
 
       body = await response.text();
+
       size = new Blob([body]).size;
 
     } catch (err) {
       error = err;
-      if (err && err.name === 'TypeError' && /Failed to fetch|NetworkError|Load failed/i.test(err.message || '')) {
-        const friendly = new Error(
-          'Network/CORS error: The browser blocked the response. ' +
-          'This usually means the API does not allow requests from this origin (GitHub Pages). ' +
-          'Use the Code tab (cURL or Python) to run the same request outside the browser.'
-        );
-        friendly.name = 'CORSOrNetworkError';
-        friendly.original = err;
-        error = friendly;
+
+      if (err && err.name === 'AbortError') {
+        error = new Error('Request cancelled or timed out.');
       }
+
     } finally {
       clearTimeout(timeoutId);
-      this.controller = null;
+
+      if (this.controller === controller) {
+        this.controller = null;
+      }
     }
 
     const duration = performance.now() - start;
-    const success = !error && status != null && status >= 200 && status < 400;
+
+    const success =
+      !error &&
+      status != null &&
+      status >= 200 &&
+      status < 400;
 
     return {
       status,
