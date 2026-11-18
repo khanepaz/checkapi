@@ -1,5 +1,6 @@
 /**
  * API LAB - Main Application
+ * Includes Code snippet generation (curl / Python / JS) after each request.
  */
 
 const App = {
@@ -307,11 +308,13 @@ const App = {
             <button type="button" class="toggle-mask" data-target="auth-token">👁</button>
           </div>
         </div>`;
-    } else if (type === 'apiKeyHeader') {
-      html = `
+    } else if (type === 'apiKeyHeader' || type === 'apiKeyQuery') {
+      const isQuery = type === 'apiKeyQuery';
+      const param = p?.auth?.paramName || 'key';
+      html = isQuery ? `
         <div class="form-group">
-          <label>Header Name</label>
-          <input type="text" class="form-control" id="auth-header-name" value="X-API-Key" placeholder="X-API-Key">
+          <label>Query Parameter Name</label>
+          <input type="text" class="form-control" id="auth-param-name" value="${Utils.escapeHtml(param)}">
         </div>
         <div class="form-group">
           <label>API Key</label>
@@ -319,13 +322,10 @@ const App = {
             <input type="password" class="form-control" id="auth-api-key" placeholder="Your API key" autocomplete="off">
             <button type="button" class="toggle-mask" data-target="auth-api-key">👁</button>
           </div>
-        </div>`;
-    } else if (type === 'apiKeyQuery') {
-      const param = p?.auth?.paramName || 'key';
-      html = `
+        </div>` : `
         <div class="form-group">
-          <label>Query Parameter Name</label>
-          <input type="text" class="form-control" id="auth-param-name" value="${Utils.escapeHtml(param)}">
+          <label>Header Name</label>
+          <input type="text" class="form-control" id="auth-header-name" value="X-API-Key">
         </div>
         <div class="form-group">
           <label>API Key</label>
@@ -509,7 +509,18 @@ const App = {
     const result = await RequestEngine.send(config);
     this.setSending(false);
 
+    // Show response body in Pretty / Raw
     ResponseViewer.render(result);
+
+    // Generate code snippets for learning
+    if (window.CodeGen) {
+      CodeGen.render({
+        method: this.state.method,
+        url: finalUrl,
+        headers: headers,
+        body: body
+      });
+    }
 
     const safeUrl = this._stripSecretsFromUrl(baseUrl, allParams);
     History.add({
@@ -526,10 +537,22 @@ const App = {
     this.renderDashboard();
     this.renderHistory();
 
+    // Auto-switch to Pretty so user sees the body
+    document.querySelectorAll('.response-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.response-side .tab-content').forEach(c => c.classList.remove('active'));
+    const prettyBtn = document.querySelector('.response-tabs .tab-btn[data-tab="tab-pretty"]');
+    const prettyTab = document.getElementById('tab-pretty');
+    if (prettyBtn) prettyBtn.classList.add('active');
+    if (prettyTab) prettyTab.classList.add('active');
+
     if (result.error) {
       this.toast(result.error.message || 'Request failed', 'error');
     } else {
-      this.toast(`Response ${result.status}`, result.success ? 'success' : 'info');
+      const hasBody = result.body && result.body.trim().length > 0;
+      this.toast(
+        hasBody ? `Response ${result.status} – body received` : `Response ${result.status}`,
+        result.success ? 'success' : 'info'
+      );
     }
   },
 
